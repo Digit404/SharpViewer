@@ -1,0 +1,34 @@
+{
+    "author": "Digit",
+    "manifest_version": 2,
+    "name": "SharpViewer",
+    "version": "1.0.0",
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*/*.jpg",
+                "*://*/*.jpeg",
+                "*://*/*.png",
+                "*://*/*.gif",
+                "*://*/*.bmp",
+                "*://*/*.webp"
+            ],
+            "js": [
+                "content-script.js"
+            ],
+            "css": [
+                "sharp-viewer.css"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+    "permissions": [
+        "activeTab"
+    ],
+    "icons": {
+        "128": "icons/icon128.png",
+        "16": "icons/icon16.png",
+        "64": "icons/icon64.png",
+        "48": "icons/icon48.png"
+    }
+}

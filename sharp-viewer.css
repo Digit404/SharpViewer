@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --popup-color: #222;
+    --background-color: #111;
+    --text-color: #ddd;
+    --font-main: "Poppins", sans-serif;
+    --checkerboard-size: 20px;
+    --checkerboard-color: #ccc;
+    --checkerboard-bg: #fff;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100dvh;
+    user-select: none;
+    overflow: hidden;
+}
+
+.checkerboard {
+    background-color: var(--checkerboard-bg);
+    background-image:
+        linear-gradient(45deg, var(--checkerboard-color) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--checkerboard-color) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--checkerboard-color) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--checkerboard-color) 75%);
+    background-size: var(--checkerboard-size) var(--checkerboard-size);
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-attachment: fixed;
+}
+
+img {
+    position: absolute;
+    height: 100%;
+    z-index: -1;
+}
+
+.popup {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--popup-color);
+    font-family: var(--font-main);
+    border-radius: 100vw;
+    color: var(--text-color);
+    padding: 0.5em 1em;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
