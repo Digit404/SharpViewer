@@ -1,8 +1,15 @@
 const body = document.body;
-const image = document.querySelector("img");
+let image = document.querySelector("img");
+const source = image.src;
 const popup = document.createElement("div");
 popup.classList.add("popup");
 body.appendChild(popup);
+
+// replace the image with a new one to prevent the default image viewer
+newImage = document.createElement("img");
+newImage.src = source;
+image.parentNode.replaceChild(newImage, image);
+image = newImage;
 
 const MAX_SCALE = 50; // in multiples
 const MIN_SCALE = 100; // in px
@@ -171,8 +178,7 @@ function clampPosition() {
 function init() {
     // clear all other stylesheets
     document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
-        if (!link.href.includes("sharp-viewer.css"))
-            link.parentNode.removeChild(link);
+        if (!link.href.includes("sharp-viewer.css")) link.parentNode.removeChild(link);
     });
 
     // calculate the initial position based on the loaded image
@@ -245,9 +251,14 @@ document.addEventListener(
 
 body.addEventListener("mousedown", (e) => {
     if (e.button !== 0) return;
+    e.preventDefault();
     dragging = true;
     startX = e.clientX;
     startY = e.clientY;
+});
+
+image.addEventListener("dragstart", (e) => {
+    e.preventDefault(); // Prevent default image dragging
 });
 
 document.addEventListener("mousemove", (e) => {
@@ -263,6 +274,7 @@ document.addEventListener("mousemove", (e) => {
 });
 
 document.addEventListener("mouseup", (e) => {
+    e.preventDefault();
     if (!dragging) return;
     body.style.cursor = "auto";
     dragging = false;

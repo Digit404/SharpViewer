@@ -10,6 +10,7 @@ SharpViewer is a browser extension that enhances your image viewing experience. 
 - **Interpolation Modes**: Switch between smooth and pixelated rendering for crisp pixel art viewing.
 - **Multiple View Modes**: Fit, Actual Size, and Fill modes available.
 - **Keyboard Shortcuts**: Quick access to various functions.
+- **SVG Support**: Finally view SVGs like you would any other image.
 
 ### Keyboard Shortcuts
 
