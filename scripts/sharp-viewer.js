@@ -16,11 +16,14 @@ const MIN_SCALE = 100; // in px
 
 // variables for dragging
 let viewMode = "fit";
+
 let popupTimeout;
+
 let dragging = false,
     startX = 0,
     startY = 0;
 let scale = 1;
+
 let currentLeft;
 let currentTop;
 
@@ -55,9 +58,12 @@ function resetTransform(mode) {
                 newHeight = containerRect.height;
                 newWidth = newHeight * ratio;
             }
+
+            popupText("View: Fit");
         } else if (mode === "actual") {
             newWidth = image.naturalWidth;
             newHeight = image.naturalHeight;
+            popupText("View: Actual");
         } else if (mode === "fill") {
             newWidth = containerRect.width;
             newHeight = newWidth / ratio;
@@ -66,6 +72,7 @@ function resetTransform(mode) {
                 newHeight = containerRect.height;
                 newWidth = newHeight * ratio;
             }
+            popupText("View: Fill");
         }
 
         image.style.width = newWidth + "px";
@@ -175,6 +182,101 @@ function clampPosition() {
     }
 }
 
+function toggleViewMode() {
+    if (viewMode === "fit") {
+        resetTransform("actual");
+    } else {
+        resetTransform("fit");
+    }
+}
+
+function toggleInterpolation() {
+    // toggle interpolation
+    const pixelated = image.style.imageRendering === "pixelated";
+    image.style.imageRendering = pixelated ? "auto" : "pixelated";
+
+    // pixelated contains the value of the previous state
+    const text = pixelated ? "Linear" : "Nearest";
+    popupText(`Interpolation: ${text}`);
+}
+
+class Keybind {
+    static bindings = [];
+    static hintElement;
+    static hintTimeout;
+
+    constructor(keys, action, name) {
+        this.keys = keys;
+        this.action = action;
+        this.name = name;
+
+        Keybind.bindings.push(this);
+    }
+
+    static setListeners() {
+        document.addEventListener("keydown", (e) => {
+            const key = e.key.toLowerCase();
+            const code = e.code;
+
+            for (const bind of Keybind.bindings) {
+                if (bind.keys.includes(key) || bind.keys.includes(code)) {
+                    e.preventDefault();
+                    bind.action();
+                }
+            }
+        });
+    }
+
+    static createKeybindHint() {
+        const hint = document.createElement("table");
+        hint.classList.add("keybind-hint");
+
+        const head = document.createElement("thead");
+        const headRow = document.createElement("tr");
+        const headKeys = document.createElement("th");
+        const headAction = document.createElement("th");
+
+        headKeys.textContent = "Key";
+        headAction.textContent = "Action";
+
+        headRow.appendChild(headKeys);
+        headRow.appendChild(headAction);
+        head.appendChild(headRow);
+
+        hint.appendChild(head);
+
+        for (const bind of Keybind.bindings) {
+            const row = document.createElement("tr");
+            const keys = document.createElement("td");
+            const action = document.createElement("td");
+
+            const key = bind.keys[0];
+            const kbd = document.createElement("kbd");
+            kbd.textContent = key.toUpperCase();
+            keys.appendChild(kbd);
+
+            action.textContent = bind.name;
+
+            row.appendChild(keys);
+            row.appendChild(action);
+            hint.appendChild(row);
+        }
+
+        body.appendChild(hint);
+
+        Keybind.hintElement = hint;
+    }
+
+    static showKeybindHint() {
+        Keybind.hintElement.style.opacity = 1;
+
+        clearTimeout(Keybind.hintTimeout);
+        Keybind.hintTimeout = setTimeout(() => {
+            Keybind.hintElement.style.opacity = 0;
+        }, 5000);
+    }
+}
+
 function init() {
     // clear all other stylesheets
     document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
@@ -186,6 +288,19 @@ function init() {
     currentTop = parseFloat(getComputedStyle(image).top) || 0;
 
     resetTransform("fit");
+
+    new Keybind(["Space"], toggleViewMode, "Toggle View Mode");
+    new Keybind(["0", "f"], () => resetTransform("fit"), "View: Fit");
+    new Keybind(["1", "a"], () => resetTransform("actual"), "View: Actual");
+    new Keybind(["2"], () => resetTransform("fill"), "View: Fill");
+    new Keybind(["+", "Equal"], () => zoomImage(1.1), "Zoom In");
+    new Keybind(["-"], () => zoomImage(0.9), "Zoom Out");
+    new Keybind(["p"], toggleInterpolation, "Toggle Interpolation");
+    new Keybind(["b"], () => image.classList.toggle("checkerboard"), "Toggle Checkerboard");
+    new Keybind(["h", "Slash"], Keybind.showKeybindHint, "Show Keybinds");
+
+    Keybind.createKeybindHint();
+    Keybind.setListeners();
 }
 
 if (image.complete) {
@@ -193,41 +308,6 @@ if (image.complete) {
 } else {
     image.addEventListener("load", init);
 }
-
-document.addEventListener("keydown", (e) => {
-    if (e.code === "KeyP") {
-        // toggle interpolation
-        const pixelated = image.style.imageRendering === "pixelated";
-        image.style.imageRendering = pixelated ? "auto" : "pixelated";
-
-        // pixelated contains the value of the previous state
-        const text = pixelated ? "Linear" : "Nearest";
-        popupText(`Interpolation: ${text}`);
-    } else if (e.key === "0" || e.code === "KeyF") {
-        resetTransform("fit");
-        popupText("View: Fit");
-    } else if (e.key === "1" || e.code === "KeyA") {
-        resetTransform("actual");
-        popupText("View: Actual");
-    } else if (e.key === "2") {
-        resetTransform("fill");
-        popupText("View: Fill");
-    } else if (e.key === "+" || e.code === "Equal") {
-        zoomImage(1.1);
-    } else if (e.key === "-") {
-        zoomImage(0.9);
-    } else if (e.code === "Space") {
-        if (viewMode === "fit") {
-            resetTransform("actual");
-            popupText("View: Actual");
-        } else {
-            resetTransform("fit");
-            popupText("View: Fit");
-        }
-    } else if (e.code === "KeyB") {
-        image.classList.toggle("checkerboard");
-    }
-});
 
 document.addEventListener(
     "wheel",

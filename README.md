@@ -22,6 +22,7 @@ SharpViewer is a browser extension that enhances your image viewing experience. 
 - `-`: Zoom out
 - `Space`: Toggle between Fit and Actual view
 - `B`: Toggle checkerboard background
+- `H` or `/`: Show keybinds
 
 ### Mouse Controls
 
