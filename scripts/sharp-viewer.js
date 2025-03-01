@@ -5,6 +5,13 @@ const popup = document.createElement("div");
 popup.classList.add("popup");
 body.appendChild(popup);
 
+let naturalHeight;
+let naturalWidth;
+let aspectRatio;
+
+let scaleX = 1;
+let scaleY = 1;
+
 // replace the image with a new one to prevent the default image viewer
 newImage = document.createElement("img");
 newImage.src = source;
@@ -41,9 +48,7 @@ function popupText(text) {
 function resetTransform(mode) {
     // reset image position and size
 
-    // calculate viewport size and aspect ratio
     const containerRect = body.getBoundingClientRect();
-    const ratio = image.naturalWidth / image.naturalHeight;
 
     viewMode = mode;
 
@@ -52,25 +57,25 @@ function resetTransform(mode) {
 
         if (mode === "fit") {
             newWidth = containerRect.width;
-            newHeight = newWidth / ratio;
+            newHeight = newWidth / aspectRatio;
 
             if (newHeight > containerRect.height) {
                 newHeight = containerRect.height;
-                newWidth = newHeight * ratio;
+                newWidth = newHeight * aspectRatio;
             }
 
             popupText("View: Fit");
         } else if (mode === "actual") {
-            newWidth = image.naturalWidth;
-            newHeight = image.naturalHeight;
+            newWidth = naturalWidth;
+            newHeight = naturalHeight;
             popupText("View: Actual");
         } else if (mode === "fill") {
             newWidth = containerRect.width;
-            newHeight = newWidth / ratio;
+            newHeight = newWidth / aspectRatio;
 
             if (newHeight < containerRect.height) {
                 newHeight = containerRect.height;
-                newWidth = newHeight * ratio;
+                newWidth = newHeight * aspectRatio;
             }
             popupText("View: Fill");
         }
@@ -96,7 +101,9 @@ function resetTransform(mode) {
     currentLeft = parseFloat(image.style.left);
     currentTop = parseFloat(image.style.top);
 
-    scale = imgRect.width / image.naturalWidth;
+    scale = imgRect.width / naturalWidth;
+
+    image.style.transform = `scale(${scaleX}, ${scaleY})`; // apply flip
 
     clampPosition();
 }
@@ -109,8 +116,8 @@ function zoomImage(factor, x = window.innerWidth / 2, y = window.innerHeight / 2
     if (newScale > MAX_SCALE) {
         newScale = MAX_SCALE;
         factor = MAX_SCALE / scale;
-    } else if (image.naturalWidth * newScale < MIN_SCALE || image.naturalHeight * newScale < MIN_SCALE) {
-        newScale = MIN_SCALE / Math.min(image.naturalWidth, image.naturalHeight);
+    } else if (naturalWidth * newScale < MIN_SCALE || naturalHeight * newScale < MIN_SCALE) {
+        newScale = MIN_SCALE / Math.min(naturalWidth, naturalHeight);
         factor = newScale / scale;
     }
 
@@ -203,12 +210,14 @@ function toggleInterpolation() {
 class Keybind {
     static bindings = [];
     static hintElement;
-    static hintTimeout;
 
-    constructor(keys, action, name) {
+    constructor(keys, action, name, ctrl = false, shift = false, alt = false) {
         this.keys = keys;
         this.action = action;
         this.name = name;
+        this.ctrl = ctrl;
+        this.shift = shift;
+        this.alt = alt;
 
         Keybind.bindings.push(this);
     }
@@ -220,6 +229,10 @@ class Keybind {
 
             for (const bind of Keybind.bindings) {
                 if (bind.keys.includes(key) || bind.keys.includes(code)) {
+                    if (bind.ctrl !== e.ctrlKey) continue;
+                    if (bind.shift !== e.shiftKey) continue;
+                    if (bind.alt !== e.altKey) continue;
+
                     e.preventDefault();
                     bind.action();
                 }
@@ -231,49 +244,93 @@ class Keybind {
         const hint = document.createElement("table");
         hint.classList.add("keybind-hint");
 
-        const head = document.createElement("thead");
-        const headRow = document.createElement("tr");
-        const headKeys = document.createElement("th");
-        const headAction = document.createElement("th");
-
-        headKeys.textContent = "Key";
-        headAction.textContent = "Action";
-
-        headRow.appendChild(headKeys);
-        headRow.appendChild(headAction);
-        head.appendChild(headRow);
-
-        hint.appendChild(head);
+        // group keybinds by action name
+        const nameToKeys = new Map();
 
         for (const bind of Keybind.bindings) {
+            const modifierParts = [];
+            if (bind.ctrl) modifierParts.push("Ctrl");
+            if (bind.shift) modifierParts.push("Shift");
+            if (bind.alt) modifierParts.push("Alt");
+            const keyName = bind.keys[0].length === 1 ? bind.keys[0].toUpperCase() : bind.keys[0];
+            const keyCombo = [...modifierParts, keyName].join("+");
+
+            if (nameToKeys.has(bind.name)) {
+                nameToKeys.get(bind.name).push(keyCombo);
+            } else {
+                nameToKeys.set(bind.name, [keyCombo]);
+            }
+        }
+
+        for (const [name, keys] of nameToKeys) {
             const row = document.createElement("tr");
-            const keys = document.createElement("td");
-            const action = document.createElement("td");
+            const keysCell = document.createElement("td");
+            const actionCell = document.createElement("td");
 
-            const key = bind.keys[0];
-            const kbd = document.createElement("kbd");
-            kbd.textContent = key.toUpperCase();
-            keys.appendChild(kbd);
+            // join multiple keys with "/"
+            keysCell.textContent = "";
 
-            action.textContent = bind.name;
+            keys.forEach((key, index) => {
+                if (index > 0) keysCell.appendChild(document.createTextNode(" / "));
 
-            row.appendChild(keys);
-            row.appendChild(action);
+                const kbdElement = document.createElement("kbd");
+                kbdElement.textContent = key;
+
+                keysCell.appendChild(kbdElement);
+            });
+
+            actionCell.textContent = name;
+
+            row.appendChild(keysCell);
+            row.appendChild(actionCell);
             hint.appendChild(row);
         }
 
-        body.appendChild(hint);
-
+        document.body.appendChild(hint);
         Keybind.hintElement = hint;
     }
 
-    static showKeybindHint() {
-        Keybind.hintElement.style.opacity = 1;
+    static toggleKeybindHint() {
+        Keybind.hintElement.style.opacity = Keybind.hintElement.style.opacity === "1" ? 0 : 1;
+    }
+}
 
-        clearTimeout(Keybind.hintTimeout);
-        Keybind.hintTimeout = setTimeout(() => {
-            Keybind.hintElement.style.opacity = 0;
-        }, 5000);
+async function copyImage() {
+    const url = image.src;
+    const response = await fetch(url, { mode: "cors" });
+    const blob = await response.blob();
+    const item = new ClipboardItem({ [blob.type]: blob });
+    try {
+        await navigator.clipboard.write([item]);
+    } catch (error) {
+        console.error("Failed to copy image:", error);
+    }
+    popupText("Image Copied");
+}
+
+function copyImageLink() {
+    navigator.clipboard.writeText(image.src);
+    popupText("Image Link Copied");
+}
+
+function flipHorizontal() {
+    scaleX *= -1; // toggle between 1 and -1
+    resetTransform();
+    popupText("Flipped Horizontally");
+}
+
+function flipVertical() {
+    scaleY *= -1; // toggle between 1 and -1
+    resetTransform();
+    popupText("Flipped Vertically");
+}
+
+function fullscreen() {
+    // toggle fullscreen
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        document.documentElement.requestFullscreen();
     }
 }
 
@@ -287,17 +344,33 @@ function init() {
     currentLeft = parseFloat(getComputedStyle(image).left) || 0;
     currentTop = parseFloat(getComputedStyle(image).top) || 0;
 
+    naturalHeight = image.naturalHeight;
+    naturalWidth = image.naturalWidth;
+
+    if (naturalHeight === 0 || naturalWidth === 0) {
+        // some svg images have 0 natural dimensions
+        naturalHeight = image.height;
+        naturalWidth = image.width;
+    }
+
+    aspectRatio = naturalWidth / naturalHeight;
+
     resetTransform("fit");
 
     new Keybind(["Space"], toggleViewMode, "Toggle View Mode");
-    new Keybind(["0", "f"], () => resetTransform("fit"), "View: Fit");
-    new Keybind(["1", "a"], () => resetTransform("actual"), "View: Actual");
-    new Keybind(["2"], () => resetTransform("fill"), "View: Fill");
-    new Keybind(["+", "Equal"], () => zoomImage(1.1), "Zoom In");
-    new Keybind(["-"], () => zoomImage(0.9), "Zoom Out");
+    new Keybind(["f"], fullscreen, "Fullscreen");
+    new Keybind(["0"], () => resetTransform("fit"), "Fit / Actual / Fill");
+    new Keybind(["1"], () => resetTransform("actual"), "Fit / Actual / Fill");
+    new Keybind(["2"], () => resetTransform("fill"), "Fit / Actual / Fill");
+    new Keybind(["+", "Equal"], () => zoomImage(1.1), "Zoom");
+    new Keybind(["-"], () => zoomImage(0.9), "Zoom");
     new Keybind(["p"], toggleInterpolation, "Toggle Interpolation");
     new Keybind(["b"], () => image.classList.toggle("checkerboard"), "Toggle Checkerboard");
-    new Keybind(["h", "Slash"], Keybind.showKeybindHint, "Show Keybinds");
+    new Keybind(["/"], Keybind.toggleKeybindHint, "Show Keybinds");
+    new Keybind(["c"], copyImage, "Copy Image", (ctrl = true));
+    new Keybind(["c"], copyImageLink, "Copy Image Link", (ctrl = true), (shift = true));
+    new Keybind(["h"], flipHorizontal, "Flip Image");
+    new Keybind(["v"], flipVertical, "Flip Image");
 
     Keybind.createKeybindHint();
     Keybind.setListeners();
@@ -338,7 +411,7 @@ body.addEventListener("mousedown", (e) => {
 });
 
 image.addEventListener("dragstart", (e) => {
-    e.preventDefault(); // Prevent default image dragging
+    e.preventDefault(); // prevent default image dragging
 });
 
 document.addEventListener("mousemove", (e) => {

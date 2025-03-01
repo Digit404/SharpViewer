@@ -75,6 +75,10 @@ img {
     padding: 0 0.5em;
 }
 
+.keybind-hint thead {
+    font-size: 1.2em;
+}
+
 kbd {
     background-color: var(--secondary-color);
     border-radius: 5px;
