@@ -1,212 +1,3 @@
-const body = document.body;
-let image = document.querySelector("img");
-const source = image.src;
-const popup = document.createElement("div");
-popup.classList.add("popup");
-body.appendChild(popup);
-
-let naturalHeight;
-let naturalWidth;
-let aspectRatio;
-
-let scaleX = 1;
-let scaleY = 1;
-
-// replace the image with a new one to prevent the default image viewer
-newImage = document.createElement("img");
-newImage.src = source;
-image.parentNode.replaceChild(newImage, image);
-image = newImage;
-
-const MAX_SCALE = 50; // in multiples
-const MIN_SCALE = 100; // in px
-
-// variables for dragging
-let viewMode = "fit";
-
-let popupTimeout;
-
-let dragging = false,
-    startX = 0,
-    startY = 0;
-let scale = 1;
-
-let currentLeft;
-let currentTop;
-
-function popupText(text) {
-    // display popup with text then fade out
-    popup.textContent = text;
-    popup.style.opacity = 1;
-
-    clearTimeout(popupTimeout);
-    popupTimeout = setTimeout(() => {
-        popup.style.opacity = 0;
-    }, 2000);
-}
-
-function resetTransform(mode) {
-    // reset image position and size
-
-    const containerRect = body.getBoundingClientRect();
-
-    viewMode = mode;
-
-    if (mode !== "zoom") {
-        let newWidth, newHeight;
-
-        if (mode === "fit") {
-            newWidth = containerRect.width;
-            newHeight = newWidth / aspectRatio;
-
-            if (newHeight > containerRect.height) {
-                newHeight = containerRect.height;
-                newWidth = newHeight * aspectRatio;
-            }
-
-            popupText("View: Fit");
-        } else if (mode === "actual") {
-            newWidth = naturalWidth;
-            newHeight = naturalHeight;
-            popupText("View: Actual");
-        } else if (mode === "fill") {
-            newWidth = containerRect.width;
-            newHeight = newWidth / aspectRatio;
-
-            if (newHeight < containerRect.height) {
-                newHeight = containerRect.height;
-                newWidth = newHeight * aspectRatio;
-            }
-            popupText("View: Fill");
-        }
-
-        image.style.width = newWidth + "px";
-        image.style.height = newHeight + "px";
-    }
-
-    // re-center image
-    const containerCenterX = containerRect.left + containerRect.width / 2;
-    const containerCenterY = containerRect.top + containerRect.height / 2;
-
-    const imgRect = image.getBoundingClientRect();
-    const oldCenterX = imgRect.left + imgRect.width / 2;
-    const oldCenterY = imgRect.top + imgRect.height / 2;
-
-    const offsetX = oldCenterX - containerCenterX;
-    const offsetY = oldCenterY - containerCenterY;
-
-    image.style.left = containerCenterX - offsetX - imgRect.width / 2 + "px";
-    image.style.top = containerCenterY - offsetY - imgRect.height / 2 + "px";
-
-    currentLeft = parseFloat(image.style.left);
-    currentTop = parseFloat(image.style.top);
-
-    scale = imgRect.width / naturalWidth;
-
-    image.style.transform = `scale(${scaleX}, ${scaleY})`; // apply flip
-
-    clampPosition();
-}
-
-function zoomImage(factor, x = window.innerWidth / 2, y = window.innerHeight / 2) {
-    // calculate the new scale
-    let newScale = scale * factor;
-
-    // limit the scale
-    if (newScale > MAX_SCALE) {
-        newScale = MAX_SCALE;
-        factor = MAX_SCALE / scale;
-    } else if (naturalWidth * newScale < MIN_SCALE || naturalHeight * newScale < MIN_SCALE) {
-        newScale = MIN_SCALE / Math.min(naturalWidth, naturalHeight);
-        factor = newScale / scale;
-    }
-
-    scale = newScale;
-
-    viewMode = "zoom";
-    const imageRect = image.getBoundingClientRect();
-    let offsetX = (x - imageRect.left) * (1 - factor);
-    let offsetY = (y - imageRect.top) * (1 - factor);
-    let newWidth = imageRect.width * factor;
-    let newHeight = imageRect.height * factor;
-
-    // manipulate the image
-    image.style.width = newWidth + "px";
-    image.style.height = newHeight + "px";
-
-    const newLeft = imageRect.left + offsetX;
-    const newTop = imageRect.top + offsetY;
-    image.style.left = newLeft + "px";
-    image.style.top = newTop + "px";
-
-    clampPosition();
-    currentLeft = parseFloat(image.style.left);
-    currentTop = parseFloat(image.style.top);
-
-    const zoomPercent = Math.round(scale * 100);
-    popupText(`Zoom: ${zoomPercent}%`);
-}
-
-function clampPosition() {
-    const containerRect = body.getBoundingClientRect();
-    const imgRect = image.getBoundingClientRect();
-
-    let changed = false;
-
-    let newLeft = parseFloat(image.style.left);
-    let newTop = parseFloat(image.style.top);
-
-    if (imgRect.width <= containerRect.width) {
-        newLeft = (containerRect.width - imgRect.width) / 2;
-        changed = true;
-    } else {
-        if (newLeft > 0) {
-            newLeft = 0;
-            changed = true;
-        }
-        if (newLeft + imgRect.width < containerRect.width) {
-            newLeft = containerRect.width - imgRect.width;
-            changed = true;
-        }
-    }
-    if (imgRect.height <= containerRect.height) {
-        newTop = (containerRect.height - imgRect.height) / 2;
-        changed = true;
-    } else {
-        if (newTop > 0) {
-            newTop = 0;
-            changed = true;
-        }
-        if (newTop + imgRect.height < containerRect.height) {
-            newTop = containerRect.height - imgRect.height;
-            changed = true;
-        }
-    }
-
-    if (changed) {
-        image.style.left = newLeft + "px";
-        image.style.top = newTop + "px";
-    }
-}
-
-function toggleViewMode() {
-    if (viewMode === "fit") {
-        resetTransform("actual");
-    } else {
-        resetTransform("fit");
-    }
-}
-
-function toggleInterpolation() {
-    // toggle interpolation
-    const pixelated = image.style.imageRendering === "pixelated";
-    image.style.imageRendering = pixelated ? "auto" : "pixelated";
-
-    // pixelated contains the value of the previous state
-    const text = pixelated ? "Linear" : "Nearest";
-    popupText(`Interpolation: ${text}`);
-}
-
 class Keybind {
     static bindings = [];
     static hintElement;
@@ -228,7 +19,9 @@ class Keybind {
             const code = e.code;
 
             for (const bind of Keybind.bindings) {
+                // match key/code
                 if (bind.keys.includes(key) || bind.keys.includes(code)) {
+                    // match modifiers
                     if (bind.ctrl !== e.ctrlKey) continue;
                     if (bind.shift !== e.shiftKey) continue;
                     if (bind.alt !== e.altKey) continue;
@@ -244,9 +37,7 @@ class Keybind {
         const hint = document.createElement("table");
         hint.classList.add("keybind-hint");
 
-        // group keybinds by action name
-        const nameToKeys = new Map();
-
+        const nameToKeys = new Map(); // group keybinds by action name
         for (const bind of Keybind.bindings) {
             const modifierParts = [];
             if (bind.ctrl) modifierParts.push("Ctrl");
@@ -267,18 +58,13 @@ class Keybind {
             const keysCell = document.createElement("td");
             const actionCell = document.createElement("td");
 
-            // join multiple keys with "/"
             keysCell.textContent = "";
-
             keys.forEach((key, index) => {
                 if (index > 0) keysCell.appendChild(document.createTextNode(" / "));
-
                 const kbdElement = document.createElement("kbd");
                 kbdElement.textContent = key;
-
                 keysCell.appendChild(kbdElement);
             });
-
             actionCell.textContent = name;
 
             row.appendChild(keysCell);
@@ -291,164 +77,379 @@ class Keybind {
     }
 
     static toggleKeybindHint() {
-        Keybind.hintElement.style.opacity = Keybind.hintElement.style.opacity === "1" ? 0 : 1;
+        const current = Keybind.hintElement.style.opacity;
+        Keybind.hintElement.style.opacity = current === "1" ? 0 : 1;
     }
 }
 
-async function copyImage() {
-    const url = image.src;
-    const response = await fetch(url, { mode: "cors" });
-    const blob = await response.blob();
-    const item = new ClipboardItem({ [blob.type]: blob });
-    try {
-        await navigator.clipboard.write([item]);
-    } catch (error) {
-        console.error("Failed to copy image:", error);
-    }
-    popupText("Image Copied");
-}
+class SharpViewer {
+    constructor(imageContainer, image) {
+        this.imageContainer = imageContainer;
+        this.image = image;
+        this.source = image.src;
 
-function copyImageLink() {
-    navigator.clipboard.writeText(image.src);
-    popupText("Image Link Copied");
-}
+        // create popup
+        this.popup = document.createElement("div");
+        this.popup.classList.add("popup");
+        this.imageContainer.appendChild(this.popup);
 
-function flipHorizontal() {
-    scaleX *= -1; // toggle between 1 and -1
-    resetTransform();
-    popupText("Flipped Horizontally");
-}
+        // initialize variables
+        this.naturalHeight = 0;
+        this.naturalWidth = 0;
+        this.aspectRatio = 1;
 
-function flipVertical() {
-    scaleY *= -1; // toggle between 1 and -1
-    resetTransform();
-    popupText("Flipped Vertically");
-}
+        this.scaleX = 1;
+        this.scaleY = 1;
+        this.scale = 1;
 
-function fullscreen() {
-    // toggle fullscreen
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
-    } else {
-        document.documentElement.requestFullscreen();
-    }
-}
+        this.currentLeft = 0;
+        this.currentTop = 0;
+        this.startX = 0;
+        this.startY = 0;
 
-function init() {
-    // clear all other stylesheets
-    document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
-        if (!link.href.includes("sharp-viewer.css")) link.parentNode.removeChild(link);
-    });
+        this.popupTimeout = null;
+        this.dragging = false;
+        this.viewMode = "fit";
 
-    // calculate the initial position based on the loaded image
-    currentLeft = parseFloat(getComputedStyle(image).left) || 0;
-    currentTop = parseFloat(getComputedStyle(image).top) || 0;
+        this.MAX_SCALE = 50;
+        this.MIN_SCALE = 100;
 
-    naturalHeight = image.naturalHeight;
-    naturalWidth = image.naturalWidth;
+        // replace the image with a new one to prevent the default image viewer
+        const newImage = document.createElement("img");
+        newImage.src = this.source;
+        this.image.parentNode.replaceChild(newImage, this.image);
+        this.image = newImage;
 
-    if (naturalHeight === 0 || naturalWidth === 0) {
-        // some svg images have 0 natural dimensions
-        naturalHeight = image.height;
-        naturalWidth = image.width;
+        this.init();
     }
 
-    aspectRatio = naturalWidth / naturalHeight;
+    init() {
+        // clear all stylesheets except sharp-viewer.css
+        document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+            if (!link.href.includes("sharp-viewer.css")) link.parentNode.removeChild(link);
+        });
 
-    resetTransform("fit");
+        // calculate initial positions based on the loaded image
+        this.currentLeft = parseFloat(getComputedStyle(this.image).left) || 0;
+        this.currentTop = parseFloat(getComputedStyle(this.image).top) || 0;
 
-    new Keybind(["Space"], toggleViewMode, "Toggle View Mode");
-    new Keybind(["f"], fullscreen, "Fullscreen");
-    new Keybind(["0"], () => resetTransform("fit"), "Fit / Actual / Fill");
-    new Keybind(["1"], () => resetTransform("actual"), "Fit / Actual / Fill");
-    new Keybind(["2"], () => resetTransform("fill"), "Fit / Actual / Fill");
-    new Keybind(["+", "Equal"], () => zoomImage(1.1), "Zoom");
-    new Keybind(["-"], () => zoomImage(0.9), "Zoom");
-    new Keybind(["p"], toggleInterpolation, "Toggle Interpolation");
-    new Keybind(["b"], () => image.classList.toggle("checkerboard"), "Toggle Checkerboard");
-    new Keybind(["/"], Keybind.toggleKeybindHint, "Show Keybinds");
-    new Keybind(["c"], copyImage, "Copy Image", (ctrl = true));
-    new Keybind(["c"], copyImageLink, "Copy Image Link", (ctrl = true), (shift = true));
-    new Keybind(["h"], flipHorizontal, "Flip Image");
-    new Keybind(["v"], flipVertical, "Flip Image");
+        this.naturalHeight = this.image.naturalHeight || this.image.height;
+        this.naturalWidth = this.image.naturalWidth || this.image.width;
+        this.aspectRatio = this.naturalWidth / this.naturalHeight;
 
-    Keybind.createKeybindHint();
-    Keybind.setListeners();
-}
+        this.resetTransform("fit");
 
-if (image.complete) {
-    init();
-} else {
-    image.addEventListener("load", init);
-}
+        // create keybinds
+        new Keybind(["Space"], () => this.toggleViewMode(), "Toggle View Mode");
+        new Keybind(["f"], () => this.fullscreen(), "Fullscreen");
+        new Keybind(["0"], () => this.resetTransform("fit"), "Fit / Actual / Fill");
+        new Keybind(["1"], () => this.resetTransform("actual"), "Fit / Actual / Fill");
+        new Keybind(["2"], () => this.resetTransform("fill"), "Fit / Actual / Fill");
+        new Keybind(["+", "Equal"], () => this.zoomImage(1.1), "Zoom");
+        new Keybind(["-"], () => this.zoomImage(0.9), "Zoom");
+        new Keybind(["p"], () => this.toggleInterpolation(), "Toggle Interpolation");
+        new Keybind(["b"], () => this.image.classList.toggle("checkerboard"), "Toggle Checkerboard");
+        new Keybind(["/"], () => Keybind.toggleKeybindHint(), "Show Keybinds");
+        new Keybind(["c"], () => this.copyImage(), "Copy Image", true);
+        new Keybind(["c"], () => this.copyImageLink(), "Copy Image Link", true, true);
+        new Keybind(["h"], () => this.flipHorizontal(), "Flip Image");
+        new Keybind(["v"], () => this.flipVertical(), "Flip Image");
 
-document.addEventListener(
-    "wheel",
-    (e) => {
-        e.preventDefault();
+        // create the keybind hint table and set listeners
+        Keybind.createKeybindHint();
+        Keybind.setListeners();
 
-        viewMode = "zoom";
+        // handle wheel event for zoom
+        document.addEventListener(
+            "wheel",
+            (e) => {
+                e.preventDefault();
+                this.viewMode = "zoom";
+                const delta = Math.sign(e.deltaY);
+                const factor = delta > 0 ? 0.9 : 1.1;
+                const x = e.clientX;
+                const y = e.clientY;
+                this.zoomImage(factor, x, y);
+            },
+            { passive: false } // prevent default
+        );
 
-        const delta = Math.sign(e.deltaY);
-        const factor = delta > 0 ? 0.9 : 1.1;
+        // handle mousedown for dragging
+        this.imageContainer.addEventListener("mousedown", (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            this.dragging = true;
+            this.startX = e.clientX;
+            this.startY = e.clientY;
+        });
 
-        const x = e.clientX;
-        const y = e.clientY;
+        // prevent default image dragging
+        this.image.addEventListener("dragstart", (e) => {
+            e.preventDefault();
+        });
 
-        zoomImage(factor, x, y);
-    },
-    {
-        passive: false, // prevent default
+        // handle mousemove for dragging
+        document.addEventListener("mousemove", (e) => {
+            if (!this.dragging) return;
+            this.imageContainer.style.cursor = "grabbing";
+            const dx = e.clientX - this.startX;
+            const dy = e.clientY - this.startY;
+            this.image.style.left = this.currentLeft + dx + "px";
+            this.image.style.top = this.currentTop + dy + "px";
+            this.clampPosition();
+        });
+
+        // handle mouseup for drag end
+        document.addEventListener("mouseup", (e) => {
+            e.preventDefault();
+            if (!this.dragging) return;
+            this.imageContainer.style.cursor = "auto";
+            this.dragging = false;
+
+            const dx = e.clientX - this.startX;
+            const dy = e.clientY - this.startY;
+
+            if (dx === 0 && dy === 0) {
+                if (this.viewMode === "fit") {
+                    this.resetTransform("actual");
+                    this.popupText("View: Actual");
+                } else {
+                    this.resetTransform("fit");
+                    this.popupText("View: Fit");
+                }
+            }
+
+            this.currentLeft = parseFloat(this.image.style.left);
+            this.currentTop = parseFloat(this.image.style.top);
+        });
+
+        // handle resize event
+        window.addEventListener("resize", () => {
+            this.resetTransform(this.viewMode);
+        });
     }
-);
 
-body.addEventListener("mousedown", (e) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    dragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-});
+    popupText(text) {
+        // display popup with text then fade out
+        this.popup.textContent = text;
+        this.popup.style.opacity = 1;
 
-image.addEventListener("dragstart", (e) => {
-    e.preventDefault(); // prevent default image dragging
-});
+        clearTimeout(this.popupTimeout);
+        this.popupTimeout = setTimeout(() => {
+            this.popup.style.opacity = 0;
+        }, 2000);
+    }
 
-document.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    body.style.cursor = "grabbing";
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    resetTransform(mode) {
+        // reset image position and size
+        const containerRect = this.imageContainer.getBoundingClientRect();
+        this.viewMode = mode;
 
-    image.style.left = currentLeft + dx + "px";
-    image.style.top = currentTop + dy + "px";
+        if (mode !== "zoom") {
+            let newWidth, newHeight;
+            if (mode === "fit") {
+                newWidth = containerRect.width;
+                newHeight = newWidth / this.aspectRatio;
+                if (newHeight > containerRect.height) {
+                    newHeight = containerRect.height;
+                    newWidth = newHeight * this.aspectRatio;
+                }
+                this.popupText("View: Fit");
+            } else if (mode === "actual") {
+                newWidth = this.naturalWidth;
+                newHeight = this.naturalHeight;
+                this.popupText("View: Actual");
+            } else if (mode === "fill") {
+                newWidth = containerRect.width;
+                newHeight = newWidth / this.aspectRatio;
+                if (newHeight < containerRect.height) {
+                    newHeight = containerRect.height;
+                    newWidth = newHeight * this.aspectRatio;
+                }
+                this.popupText("View: Fill");
+            }
+            this.image.style.width = newWidth + "px";
+            this.image.style.height = newHeight + "px";
+        }
 
-    clampPosition();
-});
+        // re-center image
+        const containerCenterX = containerRect.left + containerRect.width / 2;
+        const containerCenterY = containerRect.top + containerRect.height / 2;
 
-document.addEventListener("mouseup", (e) => {
-    e.preventDefault();
-    if (!dragging) return;
-    body.style.cursor = "auto";
-    dragging = false;
+        const imgRect = this.image.getBoundingClientRect();
+        const oldCenterX = imgRect.left + imgRect.width / 2;
+        const oldCenterY = imgRect.top + imgRect.height / 2;
+        const offsetX = oldCenterX - containerCenterX;
+        const offsetY = oldCenterY - containerCenterY;
 
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+        this.image.style.left = containerCenterX - offsetX - imgRect.width / 2 + "px";
+        this.image.style.top = containerCenterY - offsetY - imgRect.height / 2 + "px";
 
-    if (dx === 0 && dy === 0) {
-        if (viewMode === "fit") {
-            resetTransform("actual");
-            popupText("View: Actual");
+        this.currentLeft = parseFloat(this.image.style.left);
+        this.currentTop = parseFloat(this.image.style.top);
+
+        this.scale = imgRect.width / this.naturalWidth; // scale is the ratio of displayed width to natural width
+        this.image.style.transform = `scale(${this.scaleX}, ${this.scaleY})`; // apply flip
+
+        this.clampPosition();
+    }
+
+    zoomImage(factor, x = window.innerWidth / 2, y = window.innerHeight / 2) {
+        let newScale = this.scale * factor;
+
+        // limit scale
+        if (newScale > this.MAX_SCALE) {
+            newScale = this.MAX_SCALE;
+            factor = this.MAX_SCALE / this.scale;
         } else {
-            resetTransform("fit");
-            popupText("View: Fit");
+            const newWidth = this.naturalWidth * newScale;
+            const newHeight = this.naturalHeight * newScale;
+            if (newWidth < this.MIN_SCALE || newHeight < this.MIN_SCALE) {
+                const scaleByWidth = this.MIN_SCALE / this.naturalWidth;
+                const scaleByHeight = this.MIN_SCALE / this.naturalHeight;
+                newScale = Math.max(scaleByWidth, scaleByHeight);
+                factor = newScale / this.scale;
+            }
+        }
+
+        this.scale = newScale;
+        this.viewMode = "zoom";
+
+        const imageRect = this.image.getBoundingClientRect();
+        const offsetX = (x - imageRect.left) * (1 - factor);
+        const offsetY = (y - imageRect.top) * (1 - factor);
+
+        const newWidth = imageRect.width * factor;
+        const newHeight = imageRect.height * factor;
+
+        this.image.style.width = newWidth + "px";
+        this.image.style.height = newHeight + "px";
+
+        const newLeft = imageRect.left + offsetX;
+        const newTop = imageRect.top + offsetY;
+
+        this.image.style.left = newLeft + "px";
+        this.image.style.top = newTop + "px";
+
+        this.clampPosition();
+        this.currentLeft = parseFloat(this.image.style.left);
+        this.currentTop = parseFloat(this.image.style.top);
+
+        const zoomPercent = Math.round(this.scale * 100);
+        this.popupText(`Zoom: ${zoomPercent}%`);
+    }
+
+    clampPosition() {
+        const containerRect = this.imageContainer.getBoundingClientRect();
+        const imgRect = this.image.getBoundingClientRect();
+
+        let changed = false;
+        let newLeft = parseFloat(this.image.style.left);
+        let newTop = parseFloat(this.image.style.top);
+
+        if (imgRect.width <= containerRect.width) {
+            newLeft = (containerRect.width - imgRect.width) / 2;
+            changed = true;
+        } else {
+            if (newLeft > 0) {
+                newLeft = 0;
+                changed = true;
+            }
+            if (newLeft + imgRect.width < containerRect.width) {
+                newLeft = containerRect.width - imgRect.width;
+                changed = true;
+            }
+        }
+
+        if (imgRect.height <= containerRect.height) {
+            newTop = (containerRect.height - imgRect.height) / 2;
+            changed = true;
+        } else {
+            if (newTop > 0) {
+                newTop = 0;
+                changed = true;
+            }
+            if (newTop + imgRect.height < containerRect.height) {
+                newTop = containerRect.height - imgRect.height;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            this.image.style.left = newLeft + "px";
+            this.image.style.top = newTop + "px";
         }
     }
 
-    currentLeft = parseFloat(image.style.left);
-    currentTop = parseFloat(image.style.top);
-});
+    toggleViewMode() {
+        if (this.viewMode === "fit") {
+            this.resetTransform("actual");
+        } else {
+            this.resetTransform("fit");
+        }
+    }
 
-window.addEventListener("resize", () => {
-    resetTransform(viewMode);
-});
+    toggleInterpolation() {
+        // toggle interpolation
+        const pixelated = this.image.style.imageRendering === "pixelated";
+        this.image.style.imageRendering = pixelated ? "auto" : "pixelated";
+        const text = pixelated ? "Linear" : "Nearest";
+        this.popupText(`Interpolation: ${text}`);
+    }
+
+    copyImage() {
+        // copy image to clipboard
+        const url = this.image.src;
+        fetch(url, { mode: "cors" })
+            .then((response) => response.blob())
+            .then((blob) => {
+                const item = new ClipboardItem({ [blob.type]: blob });
+                return navigator.clipboard.write([item]);
+            })
+            .then(() => {
+                this.popupText("Image Copied");
+            })
+            .catch((error) => {
+                console.error("Failed to copy image:", error);
+            });
+    }
+
+    copyImageLink() {
+        // copy image link to clipboard
+        navigator.clipboard.writeText(this.image.src);
+        this.popupText("Image Link Copied");
+    }
+
+    flipHorizontal() {
+        this.scaleX *= -1; // toggle between 1 and -1
+        this.resetTransform(this.viewMode);
+        this.popupText("Flipped Horizontally");
+    }
+
+    flipVertical() {
+        this.scaleY *= -1; // toggle between 1 and -1
+        this.resetTransform(this.viewMode);
+        this.popupText("Flipped Vertically");
+    }
+
+    fullscreen() {
+        // toggle fullscreen
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            this.imageContainer.requestFullscreen();
+        }
+    }
+}
+
+let imageContainer = document.body;
+imageContainer.classList.add("sharp-viewer");
+let image = imageContainer.querySelector("img");
+
+if (image.complete) {
+    new SharpViewer(imageContainer, image);
+} else {
+    image.addEventListener("load", () => {
+        new SharpViewer(imageContainer, image);
+    });
+}

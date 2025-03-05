@@ -1,4 +1,10 @@
-:root {
+body {
+    height: 100dvh;
+    user-select: none;
+    overflow: hidden;
+}
+
+.sharp-viewer {
     --popup-color: #222;
     --secondary-color: #444;
     --background-color: #111;
@@ -7,9 +13,7 @@
     --checkerboard-size: 20px;
     --checkerboard-color: #ccc;
     --checkerboard-bg: #fff;
-}
 
-body {
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
@@ -17,12 +21,10 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100dvh;
-    user-select: none;
     overflow: hidden;
 }
 
-.checkerboard {
+.sharp-viewer img.checkerboard {
     background-color: var(--checkerboard-bg);
     background-image:
         linear-gradient(45deg, var(--checkerboard-color) 25%, transparent 25%),
@@ -34,13 +36,13 @@ body {
     background-attachment: fixed;
 }
 
-img {
+.sharp-viewer img {
     position: absolute;
     height: 100%;
     user-select: none;
 }
 
-.popup {
+.sharp-viewer .popup {
     position: fixed;
     top: 10px;
     left: 50%;
@@ -56,7 +58,7 @@ img {
     pointer-events: none;
 }
 
-.keybind-hint {
+.sharp-viewer .keybind-hint {
     position: fixed;
     bottom: 40px;
     right: 40px;
@@ -71,15 +73,15 @@ img {
     pointer-events: none;
 }
 
-.keybind-hint td {
+.sharp-viewer .keybind-hint td {
     padding: 0 0.5em;
 }
 
-.keybind-hint thead {
+.sharp-viewer .keybind-hint thead {
     font-size: 1.2em;
 }
 
-kbd {
+.sharp-viewer kbd {
     background-color: var(--secondary-color);
     border-radius: 5px;
     padding: 0.2em 0.5em;
