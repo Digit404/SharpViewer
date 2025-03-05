@@ -94,16 +94,19 @@ class SharpViewer {
         this.imageContainer.appendChild(this.popup);
 
         // initialize variables
-        this.naturalHeight = 0;
-        this.naturalWidth = 0;
-        this.aspectRatio = 1;
+        this.naturalHeight = this.image.naturalHeight || this.image.height;
+        this.naturalWidth = this.image.naturalWidth || this.image.width;
+        this.aspectRatio = this.naturalWidth / this.naturalHeight;
 
         this.scaleX = 1;
         this.scaleY = 1;
         this.scale = 1;
 
-        this.currentLeft = 0;
-        this.currentTop = 0;
+        // calculate initial positions based on the loaded image
+        this.currentLeft = parseFloat(getComputedStyle(this.image).left) || 0;
+        this.currentTop = parseFloat(getComputedStyle(this.image).top) || 0;
+
+        // dragging variables
         this.startX = 0;
         this.startY = 0;
 
@@ -120,22 +123,10 @@ class SharpViewer {
         this.image.parentNode.replaceChild(newImage, this.image);
         this.image = newImage;
 
-        this.init();
-    }
-
-    init() {
         // clear all stylesheets except sharp-viewer.css
         document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
             if (!link.href.includes("sharp-viewer.css")) link.parentNode.removeChild(link);
         });
-
-        // calculate initial positions based on the loaded image
-        this.currentLeft = parseFloat(getComputedStyle(this.image).left) || 0;
-        this.currentTop = parseFloat(getComputedStyle(this.image).top) || 0;
-
-        this.naturalHeight = this.image.naturalHeight || this.image.height;
-        this.naturalWidth = this.image.naturalWidth || this.image.width;
-        this.aspectRatio = this.naturalWidth / this.naturalHeight;
 
         this.resetTransform("fit");
 

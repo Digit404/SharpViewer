@@ -1,5 +1,5 @@
 body {
-    height: 100dvh;
+    min-height: 100dvh;
     user-select: none;
     overflow: hidden;
 }
@@ -22,6 +22,10 @@ body {
     align-items: center;
     width: 100%;
     overflow: hidden;
+}
+
+.sharp-viewer::backdrop { /* for fullscreen */
+    background-color: var(--background-color);
 }
 
 .sharp-viewer img.checkerboard {
