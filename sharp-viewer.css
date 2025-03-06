@@ -17,14 +17,17 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
-    display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     overflow: hidden;
+    display: block;
+    height: 100dvh;
+    user-select: none;
 }
 
-.sharp-viewer::backdrop { /* for fullscreen */
+.sharp-viewer::backdrop {
+    /* for fullscreen */
     background-color: var(--background-color);
 }
 
@@ -41,7 +44,8 @@ body {
 }
 
 .sharp-viewer img {
-    position: absolute;
+    position: relative;
+    display: block;
     height: 100%;
     user-select: none;
 }

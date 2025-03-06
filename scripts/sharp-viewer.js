@@ -33,7 +33,7 @@ class Keybind {
         });
     }
 
-    static createKeybindHint() {
+    static createKeybindHint(imageContainer) {
         const hint = document.createElement("table");
         hint.classList.add("keybind-hint");
 
@@ -72,7 +72,7 @@ class Keybind {
             hint.appendChild(row);
         }
 
-        document.body.appendChild(hint);
+        imageContainer.appendChild(hint);
         Keybind.hintElement = hint;
     }
 
@@ -97,6 +97,9 @@ class SharpViewer {
         this.naturalHeight = this.image.naturalHeight || this.image.height;
         this.naturalWidth = this.image.naturalWidth || this.image.width;
         this.aspectRatio = this.naturalWidth / this.naturalHeight;
+
+        const containerRect = this.imageContainer.getBoundingClientRect();
+        this.imageContainer.style.height = containerRect.height + "px";
 
         this.scaleX = 1;
         this.scaleY = 1;
@@ -147,7 +150,7 @@ class SharpViewer {
         new Keybind(["v"], () => this.flipVertical(), "Flip Image");
 
         // create the keybind hint table and set listeners
-        Keybind.createKeybindHint();
+        Keybind.createKeybindHint(this.imageContainer);
         Keybind.setListeners();
 
         // handle wheel event for zoom
@@ -160,7 +163,10 @@ class SharpViewer {
                 const factor = delta > 0 ? 0.9 : 1.1;
                 const x = e.clientX;
                 const y = e.clientY;
-                this.zoomImage(factor, x, y);
+
+                const relativeX = x - this.imageContainer.getBoundingClientRect().left;
+                const relativeY = y - this.imageContainer.getBoundingClientRect().top;
+                this.zoomImage(factor, relativeX, relativeY);
             },
             { passive: false } // prevent default
         );
@@ -285,10 +291,10 @@ class SharpViewer {
         this.clampPosition();
     }
 
-    zoomImage(factor, x = window.innerWidth / 2, y = window.innerHeight / 2) {
+    zoomImage(factor, x = this.imageContainer.clientWidth / 2, y = this.imageContainer.clientHeight / 2) {
         let newScale = this.scale * factor;
 
-        // limit scale
+        // Limit the scale
         if (newScale > this.MAX_SCALE) {
             newScale = this.MAX_SCALE;
             factor = this.MAX_SCALE / this.scale;
@@ -307,8 +313,9 @@ class SharpViewer {
         this.viewMode = "zoom";
 
         const imageRect = this.image.getBoundingClientRect();
-        const offsetX = (x - imageRect.left) * (1 - factor);
-        const offsetY = (y - imageRect.top) * (1 - factor);
+        const containerRect = this.imageContainer.getBoundingClientRect();
+        const offsetX = (x - (imageRect.left - containerRect.left)) * (1 - factor);
+        const offsetY = (y - (imageRect.top - containerRect.top)) * (1 - factor);
 
         const newWidth = imageRect.width * factor;
         const newHeight = imageRect.height * factor;
@@ -316,8 +323,8 @@ class SharpViewer {
         this.image.style.width = newWidth + "px";
         this.image.style.height = newHeight + "px";
 
-        const newLeft = imageRect.left + offsetX;
-        const newTop = imageRect.top + offsetY;
+        const newLeft = imageRect.left - containerRect.left + offsetX;
+        const newTop = imageRect.top - containerRect.top + offsetY;
 
         this.image.style.left = newLeft + "px";
         this.image.style.top = newTop + "px";
@@ -433,9 +440,9 @@ class SharpViewer {
     }
 }
 
-let imageContainer = document.body;
+const imageContainer = document.querySelector(".sharp-viewer") || document.body;
 imageContainer.classList.add("sharp-viewer");
-let image = imageContainer.querySelector("img");
+const image = imageContainer.querySelector("img");
 
 if (image.complete) {
     new SharpViewer(imageContainer, image);
