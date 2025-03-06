@@ -1,56 +1,58 @@
 body {
-    min-height: 100dvh;
+    height: 100dvh;
     user-select: none;
     overflow: hidden;
 }
 
-.sharp-viewer {
-    --popup-color: #222;
+#sharp-viewer {
+    --popup-color: #222c;
     --secondary-color: #444;
+    --tertiary-color: #333;
     --background-color: #111;
     --text-color: #ddd;
     --font-main: "Poppins", "Roboto", Arial, sans-serif;
-    --checkerboard-size: 20px;
+    --checkerboard-size: 25px;
     --checkerboard-color: #ccc;
     --checkerboard-bg: #fff;
 
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
+    padding: 0;
     justify-content: center;
     align-items: center;
     width: 100%;
     overflow: hidden;
     display: block;
-    height: 100dvh;
+    position: relative;
     user-select: none;
 }
 
-.sharp-viewer::backdrop {
+#sharp-viewer::backdrop {
     /* for fullscreen */
     background-color: var(--background-color);
 }
 
-.sharp-viewer img.checkerboard {
+#sharp-viewer img.checkerboard {
     background-color: var(--checkerboard-bg);
     background-image:
-        linear-gradient(45deg, var(--checkerboard-color) 25%, transparent 25%),
-        linear-gradient(-45deg, var(--checkerboard-color) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, var(--checkerboard-color) 75%),
-        linear-gradient(-45deg, transparent 75%, var(--checkerboard-color) 75%);
+    linear-gradient(45deg, var(--checkerboard-color) 25%, transparent 25%, transparent 75%, var(--checkerboard-color) 75%, var(--checkerboard-color)),
+    linear-gradient(45deg, var(--checkerboard-color) 25%, transparent 25%, transparent 75%, var(--checkerboard-color) 75%, var(--checkerboard-color));
     background-size: var(--checkerboard-size) var(--checkerboard-size);
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-position: 0 0, calc(var(--checkerboard-size) / 2) calc(var(--checkerboard-size) / 2);
     background-attachment: fixed;
 }
 
-.sharp-viewer img {
+#sharp-viewer img {
     position: relative;
     display: block;
     height: 100%;
     user-select: none;
+    max-width: none;
+    max-height: none;
 }
 
-.sharp-viewer .popup {
+#sharp-viewer .popup {
     position: fixed;
     top: 10px;
     left: 50%;
@@ -64,9 +66,10 @@ body {
     opacity: 0;
     transition: opacity 0.2s;
     pointer-events: none;
+    backdrop-filter: blur(5px);
 }
 
-.sharp-viewer .keybind-hint {
+#sharp-viewer .keybind-hint {
     position: fixed;
     bottom: 40px;
     right: 40px;
@@ -74,22 +77,29 @@ body {
     font-family: var(--font-main);
     border-radius: 10px;
     color: var(--text-color);
-    padding: 1em 2em;
+    width: auto;
+    border-collapse: unset;
+    padding: 1em 1em;
     z-index: 1000;
     transition: opacity 0.2s;
     opacity: 0;
     pointer-events: none;
+    backdrop-filter: blur(5px);
 }
 
-.sharp-viewer .keybind-hint td {
+#sharp-viewer .keybind-hint tr:nth-of-type(even) {
+    background-color: #0006;
+}
+
+#sharp-viewer .keybind-hint td {
     padding: 0 0.5em;
 }
 
-.sharp-viewer .keybind-hint thead {
+#sharp-viewer .keybind-hint thead {
     font-size: 1.2em;
 }
 
-.sharp-viewer kbd {
+#sharp-viewer kbd {
     background-color: var(--secondary-color);
     border-radius: 5px;
     padding: 0.2em 0.5em;

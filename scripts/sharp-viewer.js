@@ -98,9 +98,6 @@ class SharpViewer {
         this.naturalWidth = this.image.naturalWidth || this.image.width;
         this.aspectRatio = this.naturalWidth / this.naturalHeight;
 
-        const containerRect = this.imageContainer.getBoundingClientRect();
-        this.imageContainer.style.height = containerRect.height + "px";
-
         this.scaleX = 1;
         this.scaleY = 1;
         this.scale = 1;
@@ -153,6 +150,10 @@ class SharpViewer {
         Keybind.createKeybindHint(this.imageContainer);
         Keybind.setListeners();
 
+        this.setListeners();
+    }
+
+    setListeners() {
         // handle wheel event for zoom
         document.addEventListener(
             "wheel",
@@ -440,8 +441,8 @@ class SharpViewer {
     }
 }
 
-const imageContainer = document.querySelector(".sharp-viewer") || document.body;
-imageContainer.classList.add("sharp-viewer");
+const imageContainer = document.querySelector("#sharp-viewer") || document.body;
+imageContainer.id = "sharp-viewer"
 const image = imageContainer.querySelector("img");
 
 if (image.complete) {
