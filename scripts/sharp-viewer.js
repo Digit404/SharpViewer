@@ -33,7 +33,7 @@ class Keybind {
         });
     }
 
-    static createKeybindHint(imageContainer) {
+    static createKeybindHint(mediaContainer) {
         const hint = document.createElement("table");
         hint.classList.add("keybind-hint");
 
@@ -72,7 +72,7 @@ class Keybind {
             hint.appendChild(row);
         }
 
-        imageContainer.appendChild(hint);
+        mediaContainer.appendChild(hint);
         Keybind.hintElement = hint;
     }
 
@@ -83,19 +83,19 @@ class Keybind {
 }
 
 class SharpViewer {
-    constructor(imageContainer, image) {
-        this.imageContainer = imageContainer;
-        this.image = image;
-        this.source = image.src;
+    constructor(mediaContainer, media) {
+        this.mediaContainer = mediaContainer;
+        this.media = media;
+        this.source = media.src;
 
         // create popup
         this.popup = document.createElement("div");
         this.popup.classList.add("popup");
-        this.imageContainer.appendChild(this.popup);
+        this.mediaContainer.appendChild(this.popup);
 
         // initialize variables
-        this.naturalHeight = this.image.naturalHeight || this.image.height;
-        this.naturalWidth = this.image.naturalWidth || this.image.width;
+        this.naturalHeight = this.media.naturalHeight || this.media.height || this.media.videoHeight;
+        this.naturalWidth = this.media.naturalWidth || this.media.width || this.media.videoWidth;
         this.aspectRatio = this.naturalWidth / this.naturalHeight;
 
         this.scaleX = 1;
@@ -103,8 +103,8 @@ class SharpViewer {
         this.scale = 1;
 
         // calculate initial positions based on the loaded image
-        this.currentLeft = parseFloat(getComputedStyle(this.image).left) || 0;
-        this.currentTop = parseFloat(getComputedStyle(this.image).top) || 0;
+        this.currentLeft = parseFloat(getComputedStyle(this.media).left) || 0;
+        this.currentTop = parseFloat(getComputedStyle(this.media).top) || 0;
 
         // dragging variables
         this.startX = 0;
@@ -118,10 +118,14 @@ class SharpViewer {
         this.MIN_SCALE = 100;
 
         // replace the image with a new one to prevent the default image viewer
-        const newImage = document.createElement("img");
-        newImage.src = this.source;
-        this.image.parentNode.replaceChild(newImage, this.image);
-        this.image = newImage;
+        if (this.media.tagName.toLowerCase() === "img") {
+            const newMedia = document.createElement("img");
+            newMedia.src = this.source;
+            this.media.parentNode.replaceChild(newMedia, this.media);
+            this.media = newMedia;
+        }
+
+        this.media.classList.add("media");
 
         // clear all stylesheets except sharp-viewer.css
         document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
@@ -139,7 +143,7 @@ class SharpViewer {
         new Keybind(["+", "Equal"], () => this.zoomImage(1.1), "Zoom");
         new Keybind(["-"], () => this.zoomImage(0.9), "Zoom");
         new Keybind(["p"], () => this.toggleInterpolation(), "Toggle Interpolation");
-        new Keybind(["b"], () => this.image.classList.toggle("checkerboard"), "Toggle Checkerboard");
+        new Keybind(["b"], () => this.media.classList.toggle("checkerboard"), "Toggle Checkerboard");
         new Keybind(["/"], () => Keybind.toggleKeybindHint(), "Show Keybinds");
         new Keybind(["c"], () => this.copyImage(), "Copy Image", true);
         new Keybind(["c"], () => this.copyImageLink(), "Copy Image Link", true, true);
@@ -147,7 +151,7 @@ class SharpViewer {
         new Keybind(["v"], () => this.flipVertical(), "Flip Image");
 
         // create the keybind hint table and set listeners
-        Keybind.createKeybindHint(this.imageContainer);
+        Keybind.createKeybindHint(this.mediaContainer);
         Keybind.setListeners();
 
         this.setListeners();
@@ -165,15 +169,15 @@ class SharpViewer {
                 const x = e.clientX;
                 const y = e.clientY;
 
-                const relativeX = x - this.imageContainer.getBoundingClientRect().left;
-                const relativeY = y - this.imageContainer.getBoundingClientRect().top;
+                const relativeX = x - this.mediaContainer.getBoundingClientRect().left;
+                const relativeY = y - this.mediaContainer.getBoundingClientRect().top;
                 this.zoomImage(factor, relativeX, relativeY);
             },
             { passive: false } // prevent default
         );
 
         // handle mousedown for dragging
-        this.imageContainer.addEventListener("mousedown", (e) => {
+        this.mediaContainer.addEventListener("mousedown", (e) => {
             if (e.button !== 0) return;
             e.preventDefault();
             this.dragging = true;
@@ -182,18 +186,18 @@ class SharpViewer {
         });
 
         // prevent default image dragging
-        this.image.addEventListener("dragstart", (e) => {
+        this.media.addEventListener("dragstart", (e) => {
             e.preventDefault();
         });
 
         // handle mousemove for dragging
         document.addEventListener("mousemove", (e) => {
             if (!this.dragging) return;
-            this.imageContainer.style.cursor = "grabbing";
+            this.mediaContainer.style.cursor = "grabbing";
             const dx = e.clientX - this.startX;
             const dy = e.clientY - this.startY;
-            this.image.style.left = this.currentLeft + dx + "px";
-            this.image.style.top = this.currentTop + dy + "px";
+            this.media.style.left = this.currentLeft + dx + "px";
+            this.media.style.top = this.currentTop + dy + "px";
             this.clampPosition();
         });
 
@@ -201,7 +205,7 @@ class SharpViewer {
         document.addEventListener("mouseup", (e) => {
             e.preventDefault();
             if (!this.dragging) return;
-            this.imageContainer.style.cursor = "auto";
+            this.mediaContainer.style.cursor = "auto";
             this.dragging = false;
 
             const dx = e.clientX - this.startX;
@@ -217,8 +221,8 @@ class SharpViewer {
                 }
             }
 
-            this.currentLeft = parseFloat(this.image.style.left);
-            this.currentTop = parseFloat(this.image.style.top);
+            this.currentLeft = parseFloat(this.media.style.left);
+            this.currentTop = parseFloat(this.media.style.top);
         });
 
         // handle resize event
@@ -240,7 +244,7 @@ class SharpViewer {
 
     resetTransform(mode) {
         // reset image position and size
-        const containerRect = this.imageContainer.getBoundingClientRect();
+        const containerRect = this.mediaContainer.getBoundingClientRect();
         this.viewMode = mode;
 
         if (mode !== "zoom") {
@@ -266,33 +270,33 @@ class SharpViewer {
                 }
                 this.popupText("View: Fill");
             }
-            this.image.style.width = newWidth + "px";
-            this.image.style.height = newHeight + "px";
+            this.media.style.width = newWidth + "px";
+            this.media.style.height = newHeight + "px";
         }
 
         // re-center image
         const containerCenterX = containerRect.left + containerRect.width / 2;
         const containerCenterY = containerRect.top + containerRect.height / 2;
 
-        const imgRect = this.image.getBoundingClientRect();
+        const imgRect = this.media.getBoundingClientRect();
         const oldCenterX = imgRect.left + imgRect.width / 2;
         const oldCenterY = imgRect.top + imgRect.height / 2;
         const offsetX = oldCenterX - containerCenterX;
         const offsetY = oldCenterY - containerCenterY;
 
-        this.image.style.left = containerCenterX - offsetX - imgRect.width / 2 + "px";
-        this.image.style.top = containerCenterY - offsetY - imgRect.height / 2 + "px";
+        this.media.style.left = containerCenterX - offsetX - imgRect.width / 2 + "px";
+        this.media.style.top = containerCenterY - offsetY - imgRect.height / 2 + "px";
 
-        this.currentLeft = parseFloat(this.image.style.left);
-        this.currentTop = parseFloat(this.image.style.top);
+        this.currentLeft = parseFloat(this.media.style.left);
+        this.currentTop = parseFloat(this.media.style.top);
 
         this.scale = imgRect.width / this.naturalWidth; // scale is the ratio of displayed width to natural width
-        this.image.style.transform = `scale(${this.scaleX}, ${this.scaleY})`; // apply flip
+        this.media.style.transform = `scale(${this.scaleX}, ${this.scaleY})`; // apply flip
 
         this.clampPosition();
     }
 
-    zoomImage(factor, x = this.imageContainer.clientWidth / 2, y = this.imageContainer.clientHeight / 2) {
+    zoomImage(factor, x = this.mediaContainer.clientWidth / 2, y = this.mediaContainer.clientHeight / 2) {
         let newScale = this.scale * factor;
 
         // Limit the scale
@@ -313,38 +317,38 @@ class SharpViewer {
         this.scale = newScale;
         this.viewMode = "zoom";
 
-        const imageRect = this.image.getBoundingClientRect();
-        const containerRect = this.imageContainer.getBoundingClientRect();
-        const offsetX = (x - (imageRect.left - containerRect.left)) * (1 - factor);
-        const offsetY = (y - (imageRect.top - containerRect.top)) * (1 - factor);
+        const mediaRect = this.media.getBoundingClientRect();
+        const containerRect = this.mediaContainer.getBoundingClientRect();
+        const offsetX = (x - (mediaRect.left - containerRect.left)) * (1 - factor);
+        const offsetY = (y - (mediaRect.top - containerRect.top)) * (1 - factor);
 
-        const newWidth = imageRect.width * factor;
-        const newHeight = imageRect.height * factor;
+        const newWidth = mediaRect.width * factor;
+        const newHeight = mediaRect.height * factor;
 
-        this.image.style.width = newWidth + "px";
-        this.image.style.height = newHeight + "px";
+        this.media.style.width = newWidth + "px";
+        this.media.style.height = newHeight + "px";
 
-        const newLeft = imageRect.left - containerRect.left + offsetX;
-        const newTop = imageRect.top - containerRect.top + offsetY;
+        const newLeft = mediaRect.left - containerRect.left + offsetX;
+        const newTop = mediaRect.top - containerRect.top + offsetY;
 
-        this.image.style.left = newLeft + "px";
-        this.image.style.top = newTop + "px";
+        this.media.style.left = newLeft + "px";
+        this.media.style.top = newTop + "px";
 
         this.clampPosition();
-        this.currentLeft = parseFloat(this.image.style.left);
-        this.currentTop = parseFloat(this.image.style.top);
+        this.currentLeft = parseFloat(this.media.style.left);
+        this.currentTop = parseFloat(this.media.style.top);
 
         const zoomPercent = Math.round(this.scale * 100);
         this.popupText(`Zoom: ${zoomPercent}%`);
     }
 
     clampPosition() {
-        const containerRect = this.imageContainer.getBoundingClientRect();
-        const imgRect = this.image.getBoundingClientRect();
+        const containerRect = this.mediaContainer.getBoundingClientRect();
+        const imgRect = this.media.getBoundingClientRect();
 
         let changed = false;
-        let newLeft = parseFloat(this.image.style.left);
-        let newTop = parseFloat(this.image.style.top);
+        let newLeft = parseFloat(this.media.style.left);
+        let newTop = parseFloat(this.media.style.top);
 
         if (imgRect.width <= containerRect.width) {
             newLeft = (containerRect.width - imgRect.width) / 2;
@@ -375,8 +379,8 @@ class SharpViewer {
         }
 
         if (changed) {
-            this.image.style.left = newLeft + "px";
-            this.image.style.top = newTop + "px";
+            this.media.style.left = newLeft + "px";
+            this.media.style.top = newTop + "px";
         }
     }
 
@@ -390,15 +394,15 @@ class SharpViewer {
 
     toggleInterpolation() {
         // toggle interpolation
-        const pixelated = this.image.style.imageRendering === "pixelated";
-        this.image.style.imageRendering = pixelated ? "auto" : "pixelated";
+        const pixelated = this.media.style.imageRendering === "pixelated";
+        this.media.style.imageRendering = pixelated ? "auto" : "pixelated";
         const text = pixelated ? "Linear" : "Nearest";
         this.popupText(`Interpolation: ${text}`);
     }
 
     copyImage() {
         // copy image to clipboard
-        const url = this.image.src;
+        const url = this.media.src;
         fetch(url, { mode: "cors" })
             .then((response) => response.blob())
             .then((blob) => {
@@ -415,7 +419,7 @@ class SharpViewer {
 
     copyImageLink() {
         // copy image link to clipboard
-        navigator.clipboard.writeText(this.image.src);
+        navigator.clipboard.writeText(this.media.src);
         this.popupText("Image Link Copied");
     }
 
@@ -436,19 +440,35 @@ class SharpViewer {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else {
-            this.imageContainer.requestFullscreen();
+            this.mediaContainer.requestFullscreen();
         }
     }
 }
 
-const imageContainer = document.querySelector("#sharp-viewer") || document.body;
-imageContainer.id = "sharp-viewer"
-const image = imageContainer.querySelector("img");
+const mediaContainer = document.querySelector("#sharp-viewer") || document.body;
+mediaContainer.id = "sharp-viewer";
+const media = mediaContainer.querySelector("img") || mediaContainer.querySelector("video");
 
-if (image.complete) {
-    new SharpViewer(imageContainer, image);
+function initializeSharpViewer() {
+    new SharpViewer(mediaContainer, media);
+}
+
+if (media) {
+    if (media.tagName.toLowerCase() === "img") {
+        // for an image
+        if (media.complete) {
+            initializeSharpViewer();
+        } else {
+            media.addEventListener("load", initializeSharpViewer);
+        }
+    } else if (media.tagName.toLowerCase() === "video") {
+        // for a video
+        if (media.readyState >= 4) { // wait for video to load
+            initializeSharpViewer();
+        } else {
+            media.addEventListener("canplaythrough", initializeSharpViewer);
+        }
+    }
 } else {
-    image.addEventListener("load", () => {
-        new SharpViewer(imageContainer, image);
-    });
+    console.log("SharpViewer: No image or video found in the container.");
 }
