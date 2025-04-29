@@ -13,9 +13,12 @@ browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
                 file: "scripts/is-svg.js",
             });
 
-            // redirect to custom viewer for SVGs (wrapper for the image viewer)
+            // convert the svg into a pseudo html document
             if (isSVG && isSVG[0]) {
-                await browser.tabs.executeScript(tabId, { file: "scripts/redirect.js" });
+                console.log("SVG detected, converting to image...");
+                await browser.tabs.executeScript(tabId, { file: "scripts/convert-svg.js" });
+                await browser.tabs.insertCSS(tabId, { file: "sharp-viewer.css" });
+                await browser.tabs.executeScript(tabId, { file: "scripts/sharp-viewer.js" });
             }
 
             // find reddit.com/media pages

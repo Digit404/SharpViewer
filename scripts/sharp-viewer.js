@@ -1,3 +1,10 @@
+let createElement = (tag) => document.createElement(tag);
+
+if (document.contentType === "image/svg+xml") {
+    const HTML_NS = "http://www.w3.org/1999/xhtml";
+    createElement = (tag) => document.createElementNS(HTML_NS, tag);
+}
+
 class Keybind {
     static bindings = [];
     static hintElement;
@@ -34,7 +41,7 @@ class Keybind {
     }
 
     static createKeybindHint(mediaContainer) {
-        const hint = document.createElement("table");
+        const hint = createElement("table");
         hint.classList.add("keybind-hint");
 
         const nameToKeys = new Map(); // group keybinds by action name
@@ -54,14 +61,14 @@ class Keybind {
         }
 
         for (const [name, keys] of nameToKeys) {
-            const row = document.createElement("tr");
-            const keysCell = document.createElement("td");
-            const actionCell = document.createElement("td");
+            const row = createElement("tr");
+            const keysCell = createElement("td");
+            const actionCell = createElement("td");
 
             keysCell.textContent = "";
             keys.forEach((key, index) => {
                 if (index > 0) keysCell.appendChild(document.createTextNode(" / "));
-                const kbdElement = document.createElement("kbd");
+                const kbdElement = createElement("kbd");
                 kbdElement.textContent = key;
                 keysCell.appendChild(kbdElement);
             });
@@ -89,7 +96,7 @@ class SharpViewer {
         this.source = media.src;
 
         // create popup
-        this.popup = document.createElement("div");
+        this.popup = createElement("div");
         this.popup.classList.add("popup");
         this.mediaContainer.appendChild(this.popup);
 
@@ -119,7 +126,7 @@ class SharpViewer {
 
         // replace the image with a new one to prevent the default image viewer
         if (this.media.tagName.toLowerCase() === "img") {
-            const newMedia = document.createElement("img");
+            const newMedia = createElement("img");
             newMedia.src = this.source;
             this.media.parentNode.replaceChild(newMedia, this.media);
             this.media = newMedia;
@@ -463,7 +470,8 @@ if (media) {
         }
     } else if (media.tagName.toLowerCase() === "video") {
         // for a video
-        if (media.readyState >= 4) { // wait for video to load
+        if (media.readyState >= 4) {
+            // wait for video to load
             initializeSharpViewer();
         } else {
             media.addEventListener("canplaythrough", initializeSharpViewer);
