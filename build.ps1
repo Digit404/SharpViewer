@@ -19,7 +19,6 @@ $files = (
     ".\manifest.json",
     ".\icons\",
     ".\background.js",
-    ".\sharp-viewer.html",
     ".\scripts\"
 )
 

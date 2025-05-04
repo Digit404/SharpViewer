@@ -1,8 +1,8 @@
-let createElement = (tag) => document.createElement(tag);
-
-if (document.contentType === "image/svg+xml") {
-    const HTML_NS = "http://www.w3.org/1999/xhtml";
-    createElement = (tag) => document.createElementNS(HTML_NS, tag);
+function createElement(tag) {
+    if (document.contentType === "image/svg+xml") {
+        return document.createElementNS("http://www.w3.org/1999/xhtml", tag);
+    }
+    return document.createElement(tag);
 }
 
 class Keybind {
@@ -133,6 +133,7 @@ class SharpViewer {
         }
 
         this.media.classList.add("media");
+        this.media.classList.add("checkerboard");
 
         // clear all stylesheets except sharp-viewer.css
         document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
