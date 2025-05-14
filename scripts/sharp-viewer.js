@@ -409,20 +409,33 @@ class SharpViewer {
     }
 
     copyImage() {
-        // copy image to clipboard
-        const url = this.media.src;
-        fetch(url, { mode: "cors" })
-            .then((response) => response.blob())
-            .then((blob) => {
-                const item = new ClipboardItem({ [blob.type]: blob });
-                return navigator.clipboard.write([item]);
-            })
-            .then(() => {
-                this.popupText("Image Copied");
-            })
-            .catch((error) => {
-                console.error("Failed to copy image:", error);
-            });
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // allow cross-origin image loading
+        img.src = this.media.src;
+
+        // use canvas to convert image to blob and copy to clipboard as png
+        img.onload = () => {
+            const canvas = createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            // convert to blob
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    navigator.clipboard
+                        .write([item])
+                        .then(() => {
+                            this.popupText("Image Copied");
+                        })
+                        .catch((error) => {
+                            console.error("Failed to copy image:", error);
+                        });
+                }
+            }, "image/png");
+        };
     }
 
     copyImageLink() {
