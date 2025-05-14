@@ -19,7 +19,8 @@ $files = (
     ".\manifest.json",
     ".\icons\",
     ".\background.js",
-    ".\scripts\"
+    ".\scripts\",
+    "LICENSE"
 )
 
 Compress-Archive -Path $files -DestinationPath .\dist\SharpViewer.zip -Force
