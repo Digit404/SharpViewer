@@ -10,7 +10,7 @@ if (!(Test-Path .\dist)) {
 
 foreach ($size in $iconSizes) {
     if (!(Test-Path ".\icons\icon${size}.png")) {
-        ffmpeg -i .\icon.png -vf "scale=${size}:${size}" ".\icons\icon${size}.png" -y
+        magick .\icon.png -resize ${size}x${size}".\icons\icon${size}.png"
     }
 }
 
@@ -20,6 +20,8 @@ $files = (
     ".\icons\",
     ".\background.js",
     ".\scripts\",
+    ".\options.html",
+    ".\options.js",
     "LICENSE"
 )
 

@@ -90,7 +90,7 @@ class Keybind {
 }
 
 class SharpViewer {
-    constructor(mediaContainer, media) {
+    constructor(mediaContainer, media, opts = {}) {
         this.mediaContainer = mediaContainer;
         this.media = media;
         this.source = media.src;
@@ -119,7 +119,9 @@ class SharpViewer {
 
         this.popupTimeout = null;
         this.dragging = false;
-        this.viewMode = "fit";
+
+        this.viewMode = opts.defaultView || "fit";
+        this.mediaContainer.style.setProperty("--background-color", opts.backgroundColor || "#111");
 
         this.MAX_SCALE = 50;
         this.MIN_SCALE = 100;
@@ -133,21 +135,27 @@ class SharpViewer {
         }
 
         this.media.classList.add("media");
-        this.media.classList.add("checkerboard");
+
+        if (opts.checkerboard) {
+            this.media.classList.add("checkerboard");
+        } else {
+            this.media.classList.remove("checkerboard");
+        }
 
         // clear all stylesheets except sharp-viewer.css
         document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
             if (!link.href.includes("sharp-viewer.css")) link.parentNode.removeChild(link);
         });
 
-        this.resetTransform("fit");
+        this.resetTransform(this.viewMode);
 
         // create keybinds
         new Keybind(["Space"], () => this.toggleViewMode(), "Toggle View Mode");
         new Keybind(["f"], () => this.fullscreen(), "Fullscreen");
-        new Keybind(["0"], () => this.resetTransform("fit"), "Fit / Actual / Fill");
-        new Keybind(["1"], () => this.resetTransform("actual"), "Fit / Actual / Fill");
-        new Keybind(["2"], () => this.resetTransform("fill"), "Fit / Actual / Fill");
+        new Keybind(["0"], () => this.resetTransform("fit"), "Fit / Actual / Fill / Smart");
+        new Keybind(["1"], () => this.resetTransform("actual"), "Fit / Actual / Fill / Smart");
+        new Keybind(["2"], () => this.resetTransform("fill"), "Fit / Actual / Fill / Smart");
+        new Keybind(["3"], () => this.resetTransform("smart"), "Fit / Actual / Fill / Smart");
         new Keybind(["+", "Equal"], () => this.zoomImage(1.1), "Zoom");
         new Keybind(["-"], () => this.zoomImage(0.9), "Zoom");
         new Keybind(["p"], () => this.toggleInterpolation(), "Toggle Interpolation");
@@ -277,6 +285,21 @@ class SharpViewer {
                     newWidth = newHeight * this.aspectRatio;
                 }
                 this.popupText("View: Fill");
+            } else if (mode === "smart") {
+                if (this.naturalWidth <= containerRect.width && this.naturalHeight <= containerRect.height) {
+                    newWidth = this.naturalWidth;
+                    newHeight = this.naturalHeight;
+                    this.popupText("View: Smart (Actual)");
+                } else {
+                    // image too big, use Fit
+                    newWidth = containerRect.width;
+                    newHeight = newWidth / this.aspectRatio;
+                    if (newHeight > containerRect.height) {
+                        newHeight = containerRect.height;
+                        newWidth = newHeight * this.aspectRatio;
+                    }
+                    this.popupText("View: Smart (Fit)");
+                }
             }
             this.media.style.width = newWidth + "px";
             this.media.style.height = newHeight + "px";
@@ -470,8 +493,13 @@ const mediaContainer = document.querySelector("#sharp-viewer") || document.body;
 mediaContainer.id = "sharp-viewer";
 const media = mediaContainer.querySelector("img") || mediaContainer.querySelector("video");
 
-function initializeSharpViewer() {
-    new SharpViewer(mediaContainer, media);
+async function initializeSharpViewer() {
+    const settings = await browser.storage.sync.get({
+        defaultView: "fit",
+        backgroundColor: "#111",
+        checkerboard: true,
+    });
+    new SharpViewer(mediaContainer, media, settings);
 }
 
 if (media) {

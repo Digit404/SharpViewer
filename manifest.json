@@ -2,7 +2,7 @@
     "author": "Digit",
     "manifest_version": 2,
     "name": "SharpViewer",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "background": {
         "scripts": [
             "background.js"
@@ -10,6 +10,7 @@
     },
     "permissions": [
         "tabs",
+        "storage",
         "<all_urls>"
     ],
     "icons": {
@@ -22,5 +23,9 @@
         "gecko": {
             "id": "sharp-viewer@rebitwise.com"
         }
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": false
     }
 }

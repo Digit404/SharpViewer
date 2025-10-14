@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>SharpViewer Options</title>
+    <style>
+        :root,
+        .light,
+        .dark .dark {
+            --font: "DM Sans", sans-serif;
+            --border-radius: 10px;
+            --focus-outline: inset 0 0 0 3px var(--blue);
+            --qtime: 0.2s;
+            --fg: #fff;
+            --bg: #e8e8e8;
+            --fg-hover: #ddd;
+            --half: #888;
+            --text-hover: #333;
+            --text: #111;
+            --shadow: 4px 4px 10px rgba(0, 0, 0, 0.05);
+            --inset-shadow: inset var(--shadow);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            transition: background var(--qtime), color var(--qtime), box-shadow var(--qtime);
+            border: none;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.3rem;
+        }
+
+        .card {
+            background-color: var(--fg);
+            border-radius: var(--border-radius);
+        }
+
+        .flex {
+            display: flex;
+            flex-direction: inherit;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: row;
+        }
+
+        select {
+            background-color: var(--bg);
+            color: var(--text);
+            border-radius: var(--border-radius);
+            padding: 5px 15px;
+            font-family: var(--font);
+            font-size: 1em;
+            cursor: pointer;
+            width: 150px;
+        }
+
+        select:focus-visible {
+            box-shadow: var(--focus-outline);
+        }
+
+        input[type="color"] {
+            width: 150px;
+            padding: 0;
+        }
+
+        input[type="checkbox"].switch {
+            appearance: none;
+            -webkit-appearance: none;
+            outline: none;
+            border: none;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            width: 4em;
+            height: 2em;
+            border-radius: 1337px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color var(--qtime) ease-in-out;
+            box-shadow: var(--inset-shadow);
+        }
+
+        input[type="checkbox"].switch:checked {
+            background-color: var(--text);
+        }
+
+        input[type="checkbox"].switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            bottom: 2px;
+            right: calc(50% + 2px);
+            background-color: #fff;
+            border-radius: 1337px;
+            transition: left 0.2s ease-in-out, right 0.3s ease-in-out, box-shadow var(--qtime) ease-in-out, background-color var(--qtime) ease-in-out;
+            box-shadow: var(--shadow);
+        }
+
+        input[type="checkbox"].switch:checked::after {
+            left: calc(50% + 2px);
+            background-color: var(--fg);
+            right: 2px;
+            transition: left 0.3s ease-in-out, right 0.2s ease-in-out;
+        }
+
+        input[type="checkbox"].switch:hover {
+            background-color: var(--fg-hover);
+        }
+
+        input[type="checkbox"].switch:checked:hover {
+            background-color: var(--text-hover);
+        }
+
+        input[type="checkbox"].switch:focus-visible {
+            box-shadow: var(--focus-outline);
+        }
+
+        form {
+            width: 450px;
+            max-width: 90vw;
+            margin: 20px;
+            padding: 30px;
+        }
+
+        form div {
+            justify-content: space-between;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="settings-form" class="card flex col">
+        <div class="flex row">
+            <label> Default view mode:</label>
+            <select name="defaultView">
+                <option value="fit">Fit</option>
+                <option value="actual">Actual</option>
+                <option value="fill">Fill</option>
+                <option value="smart">Smart</option>
+            </select>
+        </div>
+        <div class="flex row">
+            <label> Background color: </label>
+            <input type="color" name="backgroundColor" value="#111">
+        </div>
+        <div class="flex row">
+            <label> Show checkerboard </label>
+            <input type="checkbox" class="switch" name="checkerboard">
+        </div>
+    </form>
+    <script src="options.js"></script>
+</body>
+
+</html>
