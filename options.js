@@ -6,11 +6,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         defaultView: "fit",
         backgroundColor: "#111",
         checkerboard: true,
+        interpolation: "linear",
     });
 
     form.defaultView.value = data.defaultView;
     form.backgroundColor.value = data.backgroundColor;
     form.checkerboard.checked = data.checkerboard;
+    form.interpolation.value = data.interpolation;
 });
 
 // save on submit
@@ -19,5 +21,6 @@ form.addEventListener("change", async () => {
         defaultView: form.defaultView.value,
         backgroundColor: form.backgroundColor.value,
         checkerboard: form.checkerboard.checked,
+        interpolation: form.interpolation.value,
     });
 });

@@ -11,6 +11,7 @@ SharpViewer is an image viewer extension that replaces the default browser image
 - **Interpolation Modes**: Switch between smooth and nearest-neighbor rendering. Perfect for viewing pixel art.
 - **Keyboard Shortcuts**: Quick access to various features.
 - **SVG Support**: Finally view SVGs like you would any other image.
+- **Reddit Image Support**: Works in the Reddit image viewing wrapper.
 
 ### Keyboard Shortcuts
 

@@ -155,12 +155,19 @@
 <body>
     <form id="settings-form" class="card flex col">
         <div class="flex row">
-            <label> Default view mode:</label>
+            <label> Default view mode: </label>
             <select name="defaultView">
                 <option value="fit">Fit</option>
                 <option value="actual">Actual</option>
                 <option value="fill">Fill</option>
                 <option value="smart">Smart</option>
+            </select>
+        </div>
+        <div class="flex row">
+            <label> Interpolation mode: </label>
+            <select name="interpolation">
+                <option value="linear">Bilinear</option>
+                <option value="nearest">Nearest</option>
             </select>
         </div>
         <div class="flex row">

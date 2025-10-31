@@ -142,6 +142,8 @@ class SharpViewer {
             this.media.classList.remove("checkerboard");
         }
 
+        this.setInterpolation(opts.interpolation || "linear");
+
         // clear all stylesheets except sharp-viewer.css
         document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
             if (!link.href.includes("sharp-viewer.css")) link.parentNode.removeChild(link);
@@ -425,10 +427,25 @@ class SharpViewer {
 
     toggleInterpolation() {
         // toggle interpolation
-        const pixelated = this.media.style.imageRendering === "pixelated";
-        this.media.style.imageRendering = pixelated ? "auto" : "pixelated";
-        const text = pixelated ? "Linear" : "Nearest";
+        const current = this.media.style.imageRendering;
+        let text;
+        if (current === "pixelated") {
+            this.setInterpolation("linear");
+            text = "Linear";
+        } else {
+            this.setInterpolation("nearest");
+            text = "Nearest";
+        }
         this.popupText(`Interpolation: ${text}`);
+    }
+
+    setInterpolation(mode) {
+        // set interpolation mode
+        if (mode.toLowerCase() === "nearest") {
+            this.media.style.imageRendering = "pixelated";
+        } else {
+            this.media.style.imageRendering = "auto";
+        }
     }
 
     copyImage() {
@@ -498,6 +515,7 @@ async function initializeSharpViewer() {
         defaultView: "fit",
         backgroundColor: "#111",
         checkerboard: true,
+        interpolation: "linear",
     });
     new SharpViewer(mediaContainer, media, settings);
 }
