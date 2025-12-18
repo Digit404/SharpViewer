@@ -123,6 +123,9 @@ class SharpViewer {
         this.viewMode = opts.defaultView || "fit";
         this.mediaContainer.style.setProperty("--background-color", opts.backgroundColor || "#111");
 
+        this.mediaContainer.style.setProperty("--checkerboard-bg", opts.checkerboardBg || "#fff");
+        this.mediaContainer.style.setProperty("--checkerboard-color", opts.checkerboardColor || "#ccc");
+
         this.MAX_SCALE = 50;
         this.MIN_SCALE = 100;
 
@@ -516,6 +519,8 @@ async function initializeSharpViewer() {
         backgroundColor: "#111",
         checkerboard: true,
         interpolation: "linear",
+        checkerboardBg: "#fff",
+        checkerboardColor: "#ccc",
     });
     new SharpViewer(mediaContainer, media, settings);
 }

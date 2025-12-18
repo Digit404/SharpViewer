@@ -85,6 +85,14 @@
             padding: 0;
         }
 
+        .color-row {
+            gap: 10px;
+        }
+
+        .color-row input[type="color"] {
+            width: 70px;
+        }
+
         input[type="checkbox"].switch {
             appearance: none;
             -webkit-appearance: none;
@@ -145,7 +153,7 @@
             padding: 30px;
         }
 
-        form div {
+        form > div {
             justify-content: space-between;
             width: 100%;
         }
@@ -177,6 +185,13 @@
         <div class="flex row">
             <label> Show checkerboard </label>
             <input type="checkbox" class="switch" name="checkerboard">
+        </div>
+        <div class="flex row">
+            <label> Checkerboard color </label>
+            <div class="flex row color-row">
+                <input type="color" name="checkerboardBg" value="#fff">
+                <input type="color" name="checkerboardColor" value="#ccc">
+            </div>
         </div>
     </form>
     <script src="options.js"></script>
