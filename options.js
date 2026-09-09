@@ -4,11 +4,11 @@ const form = document.getElementById("settings-form");
 document.addEventListener("DOMContentLoaded", async () => {
     const data = await browser.storage.sync.get({
         defaultView: "fit",
-        backgroundColor: "#111",
+        backgroundColor: "#111111",
         checkerboard: true,
         interpolation: "linear",
-        checkerboardBg: "#fff",
-        checkerboardColor: "#ccc",
+        checkerboardBg: "#ffffff",
+        checkerboardColor: "#cccccc",
     });
 
     form.defaultView.value = data.defaultView;

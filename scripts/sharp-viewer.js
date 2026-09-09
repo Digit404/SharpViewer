@@ -121,6 +121,7 @@ class SharpViewer {
         this.dragging = false;
 
         this.viewMode = opts.defaultView || "fit";
+        this.mediaContainer.removeAttribute("style");
         this.mediaContainer.style.setProperty("--background-color", opts.backgroundColor || "#111");
 
         this.mediaContainer.style.setProperty("--checkerboard-bg", opts.checkerboardBg || "#fff");

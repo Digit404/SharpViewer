@@ -26,3 +26,6 @@ $files = (
 )
 
 Compress-Archive -Path $files -DestinationPath .\dist\SharpViewer.zip -Force
+
+# unzip to .\dist\SharpViewer for testing
+Expand-Archive -Path .\dist\SharpViewer.zip -DestinationPath .\dist\SharpViewer -Force
