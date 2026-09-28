@@ -120,6 +120,8 @@ class SharpViewer {
         this.popupTimeout = null;
         this.dragging = false;
 
+        this.lockPanning = opts.lockPanning ?? true;
+
         this.viewMode = opts.defaultView || "fit";
         this.mediaContainer.removeAttribute("style");
         this.mediaContainer.style.setProperty("--background-color", opts.backgroundColor || "#111");
@@ -165,6 +167,7 @@ class SharpViewer {
         new Keybind(["+", "Equal"], () => this.zoomImage(1.1), "Zoom");
         new Keybind(["-"], () => this.zoomImage(0.9), "Zoom");
         new Keybind(["p"], () => this.toggleInterpolation(), "Toggle Interpolation");
+        new Keybind(["l"], () => this.toggleLockPanning(), "Toggle Lock Panning");
         new Keybind(["b"], () => this.media.classList.toggle("checkerboard"), "Toggle Checkerboard");
         new Keybind(["/"], () => Keybind.toggleKeybindHint(), "Show Keybinds");
         new Keybind(["c"], () => this.copyImage(), "Copy Image", true);
@@ -195,7 +198,7 @@ class SharpViewer {
                 const relativeY = y - this.mediaContainer.getBoundingClientRect().top;
                 this.zoomImage(factor, relativeX, relativeY);
             },
-            { passive: false } // prevent default
+            { passive: false }, // prevent default
         );
 
         // handle mousedown for dragging
@@ -220,7 +223,11 @@ class SharpViewer {
             const dy = e.clientY - this.startY;
             this.media.style.left = this.currentLeft + dx + "px";
             this.media.style.top = this.currentTop + dy + "px";
-            this.clampPosition();
+
+            // clamp position when locked
+            if (this.lockPanning) {
+                this.clampPosition();
+            }
         });
 
         // handle mouseup for drag end
@@ -324,13 +331,13 @@ class SharpViewer {
         this.media.style.left = containerCenterX - offsetX - imgRect.width / 2 + "px";
         this.media.style.top = containerCenterY - offsetY - imgRect.height / 2 + "px";
 
-        this.currentLeft = parseFloat(this.media.style.left);
-        this.currentTop = parseFloat(this.media.style.top);
-
         this.scale = imgRect.width / this.naturalWidth; // scale is the ratio of displayed width to natural width
         this.media.style.transform = `scale(${this.scaleX}, ${this.scaleY})`; // apply flip
 
         this.clampPosition();
+
+        this.currentLeft = parseFloat(this.media.style.left);
+        this.currentTop = parseFloat(this.media.style.top);
     }
 
     zoomImage(factor, x = this.mediaContainer.clientWidth / 2, y = this.mediaContainer.clientHeight / 2) {
@@ -371,7 +378,10 @@ class SharpViewer {
         this.media.style.left = newLeft + "px";
         this.media.style.top = newTop + "px";
 
-        this.clampPosition();
+        if (this.lockPanning) {
+            this.clampPosition();
+        }
+
         this.currentLeft = parseFloat(this.media.style.left);
         this.currentTop = parseFloat(this.media.style.top);
 
@@ -421,6 +431,17 @@ class SharpViewer {
         }
     }
 
+    centerImage() {
+        const containerRect = this.mediaContainer.getBoundingClientRect();
+        const imgRect = this.media.getBoundingClientRect();
+
+        const newLeft = (containerRect.width - imgRect.width) / 2;
+        const newTop = (containerRect.height - imgRect.height) / 2;
+
+        this.media.style.left = newLeft + "px";
+        this.media.style.top = newTop + "px";
+    }
+
     toggleViewMode() {
         if (this.viewMode === "fit") {
             this.resetTransform("actual");
@@ -441,6 +462,19 @@ class SharpViewer {
             text = "Nearest";
         }
         this.popupText(`Interpolation: ${text}`);
+    }
+
+    toggleLockPanning() {
+        this.lockPanning = !this.lockPanning;
+
+        if (this.lockPanning) {
+            this.clampPosition();
+            this.currentLeft = parseFloat(this.media.style.left);
+            this.currentTop = parseFloat(this.media.style.top);
+        }
+
+        const text = this.lockPanning ? "Locked" : "Unlocked";
+        this.popupText(`Panning: ${text}`);
     }
 
     setInterpolation(mode) {
@@ -515,14 +549,19 @@ mediaContainer.id = "sharp-viewer";
 const media = mediaContainer.querySelector("img") || mediaContainer.querySelector("video");
 
 async function initializeSharpViewer() {
-    const settings = await browser.storage.sync.get({
+    let settings = {
         defaultView: "fit",
         backgroundColor: "#111",
         checkerboard: true,
         interpolation: "linear",
         checkerboardBg: "#fff",
         checkerboardColor: "#ccc",
-    });
+        lockPanning: true
+    };
+
+    if (typeof browser !== "undefined" && browser.storage?.sync) {
+        settings = await browser.storage.sync.get(settings);
+    }
     new SharpViewer(mediaContainer, media, settings);
 }
 

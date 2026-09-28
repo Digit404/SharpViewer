@@ -22,6 +22,7 @@ SharpViewer is an image viewer extension that replaces the default browser image
 - `3`: Smart fit
 - `+` / `-`: Zoom
 - `P`: Toggle interpolation (pixelated/smooth)
+- `L`: Toggle lock panning
 - `B`: Toggle checkerboard background
 - `Ctrl+C`: Copy image to clipboard
 - `Ctrl+Shift+C`: Copy image link to clipboard
